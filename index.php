@@ -1,3 +1,42 @@
+<?php
+// Handle POST submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Read raw POST data
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    // Basic validation
+    if (!isset($input['fullname'], $input['email'])) {
+        echo json_encode(['success' => false, 'error' => 'Invalid input']);
+        exit;
+    }
+
+    // Create payload with current date
+    $data = [
+        'fullname' => $input['fullname'],
+        'email' => $input['email'],
+        'timestamp' => date('Y-m-d')
+    ];
+
+    // Send to webhook
+    $ch = curl_init('https://hooks.bushwickdigital.com/webhook/d49038e3-6365-4519-ad4f-d03784b3c121');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_USERPWD, "devtest:devtest");
+    curl_setopt($ch, CURLOPT_POST, true);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode >= 200 && $httpCode < 300) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'response' => $response]);
+    }
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
